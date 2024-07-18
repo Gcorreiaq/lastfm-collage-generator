@@ -46,8 +46,8 @@ class CollageConfig:
 
 class BaseCollageBuilder:
     ENTITY = None
-    FONT_REGULAR_PATH = "fonts/DejaVuSansMono.ttf"
-    FONT_BOLD_PATH = "fonts/DejaVuSansMono-Bold.ttf"
+    FONT_REGULAR_PATH = "fonts/NotoSansCJK-Regular.ttc"
+    FONT_BOLD_PATH = "fonts/NotoSansCJK-Bold.ttc"
     FONT_SIZE = 15
     FONT_BOLD = False
     TILE_WIDTH = 300
@@ -91,14 +91,17 @@ class BaseCollageBuilder:
         new_image = Image.new("RGB", (collage_width, collage_height))
         cursor = (0, 0)
         for tile in tiles:
-            new_image.paste(Image.open(BytesIO(tile.data)), cursor)
+            im = Image.open(BytesIO(tile.data))
             title = f"{tile.title}"
-            if self.config.show_playcount:
-                title += f". ({tile.playcount})"
+            # avoid empty album covers
+            if (im.getextrema() == ((0,0),(0,0),(0,0))):
+                continue
+            new_image.paste(im, cursor)
             self._insert_tile_title(
                 image=new_image,
                 title=title,
-                cursor=cursor
+                count=f"{tile.playcount}",
+                cursor=cursor,
             )
 
             # move cursor to next tile
@@ -114,7 +117,8 @@ class BaseCollageBuilder:
             self,
             image: Image,
             title: str,
-            cursor: Tuple[int, int]
+            count: str,
+            cursor: Tuple[int, int],
     ):
         draw = ImageDraw.Draw(image, "RGBA")
         x = cursor[0]
@@ -124,15 +128,18 @@ class BaseCollageBuilder:
         if y_1 == 0:
             y_1 += self.TILE_WIDTH * 2
         draw.rectangle(((x, y_0), (x + self.TILE_WIDTH, y_1)), (0, 0, 0, 123))
-
+        draw.rectangle(((x, y), (x + self.TILE_WIDTH, y + 20 + 8)), (0, 0, 0, 123))
+        
         font_path = self.FONT_BOLD_PATH if self.FONT_BOLD else self.FONT_REGULAR_PATH
         font = ImageFont.truetype(
             f"{self._path}"
             f"/{font_path}",
-            self.FONT_SIZE
+            self.FONT_SIZE,
+            0,
+            "unic"
         )
-
         title = self._insert_newline_characters_to_text(font, title)
+        draw.text((x + 8, y + 2), f"listened {count} times", fill=(255, 255, 255), font=font)
         draw.text((x + 8, y + 240), title, fill=(255, 255, 255), font=font)
 
     @staticmethod
@@ -143,7 +150,7 @@ class BaseCollageBuilder:
         for c in text:
             processed_chars.append(c)
             processed_text = "".join(processed_chars)
-            temp_w, temp_h = font.getsize(processed_text)
+            temp_w = font.getlength(processed_text)
             if temp_w >= 275:
                 text_lines.append(processed_text)
                 processed_chars = []

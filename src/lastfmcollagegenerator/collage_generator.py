@@ -11,8 +11,8 @@ class CollageGenerator:
     Generates a NxN collage with the covers of a Last.fm
     user tops of a given period.
     """
-    MAX_COLS = 5
-    MAX_ROWS = 5
+    MAX_COLS = 17
+    MAX_ROWS = 17
 
     def __init__(self, lastfm_api_key: str, lastfm_api_secret: str):
         self.lastfm_config = LastfmConfig(
