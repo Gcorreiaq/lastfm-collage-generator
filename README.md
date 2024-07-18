@@ -10,8 +10,9 @@ It supports different configurations like the grid size or the period.
 
 ## Features
 
-- Choose the number of rows and columns (for now, up to 5)
+- Choose the number of rows and columns (for now, up to 17)
 - Choose the period to calculate the top (7day, 1month, 3month, 6month, 12month, overall. Default: 7day)
+- Avoid blank album covers
   
 ## Installation
 
