@@ -91,11 +91,17 @@ class BaseCollageBuilder:
         new_image = Image.new("RGB", (collage_width, collage_height))
         cursor = (0, 0)
         for tile in tiles:
-            im = Image.open(BytesIO(tile.data))
+            try:
+                im = Image.open(BytesIO(tile.data))
+            except Exception:
+        # fallback to a blank image if the real image is invalid
+                im = Image.new("RGB", (self.TILE_WIDTH, self.TILE_HEIGHT), (0, 0, 0))
+
             title = f"{tile.title}"
-            # avoid empty album covers
-            if (im.getextrema() == ((0,0),(0,0),(0,0))):
-                continue
+    # avoid completely black tiles if you want, optional
+            if im.getextrema() == ((0,0),(0,0),(0,0)):
+                pass  # just continue with the blank tile
+
             new_image.paste(im, cursor)
             self._insert_tile_title(
                 image=new_image,
@@ -104,14 +110,14 @@ class BaseCollageBuilder:
                 cursor=cursor,
             )
 
-            # move cursor to next tile
+    # move cursor to next tile
             y = cursor[1]
             x = cursor[0] + width
             if cursor[0] >= (collage_width - width):
                 y = cursor[1] + height
                 x = 0
             cursor = (x, y)
-        return new_image
+        return new_image    
 
     def _insert_tile_title(
         self,
