@@ -114,11 +114,11 @@ class BaseCollageBuilder:
         return new_image
 
     def _insert_tile_title(
-            self,
-            image: Image,
-            title: str,
-            count: str,
-            cursor: Tuple[int, int],
+        self,
+        image: Image,
+        title: str,
+        count: str,
+        cursor: Tuple[int, int],
     ):
         draw = ImageDraw.Draw(image, "RGBA")
         x = cursor[0]
@@ -127,18 +127,28 @@ class BaseCollageBuilder:
         y_1 = y * 2 + self.TILE_WIDTH
         if y_1 == 0:
             y_1 += self.TILE_WIDTH * 2
+
+    # Draw background rectangles
         draw.rectangle(((x, y_0), (x + self.TILE_WIDTH, y_1)), (0, 0, 0, 123))
-        draw.rectangle(((x, y), (x + self.TILE_WIDTH, y + 20 + 8)), (0, 0, 0, 123))
-        
+        draw.rectangle(((x, y), (x + self.TILE_WIDTH, y + 28)), (0, 0, 0, 123))
+
+    # Use the intended font, fallback to default if missing
         font_path = self.FONT_BOLD_PATH if self.FONT_BOLD else self.FONT_REGULAR_PATH
-        font = ImageFont.truetype(
-            f"{self._path}"
-            f"/{font_path}",
-            self.FONT_SIZE,
-            0,
-            "unic"
-        )
+        try:
+            font = ImageFont.truetype(
+                os.path.join(self._path, font_path),
+                self.FONT_SIZE,
+                0,
+                "unic"
+           )
+        except OSError:
+            print(f"⚠️ Could not load {font_path}, using default font instead")
+            font = ImageFont.load_default()
+
+    # Insert newlines if needed
         title = self._insert_newline_characters_to_text(font, title)
+
+    # Draw text
         draw.text((x + 8, y + 2), f"listened {count} times", fill=(255, 255, 255), font=font)
         draw.text((x + 8, y + 240), title, fill=(255, 255, 255), font=font)
 
